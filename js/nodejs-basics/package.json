@@ -1,0 +1,11 @@
+{
+  "name": "nodejs-basics",
+  "version": "1.0.0",
+  "description": "Learning Node.js in my own time",
+  "main": "hello.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "shivvo",
+  "license": "ISC"
+}
