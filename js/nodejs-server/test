@@ -1,0 +1,11 @@
+#! /bin/bash
+
+declare -a profile
+readarray -t profile < profile.txt
+
+server="http://${profile[0]}/"
+user=${profile[1]}
+
+echo "$server"
+echo "$user"
+curl -X GET $server

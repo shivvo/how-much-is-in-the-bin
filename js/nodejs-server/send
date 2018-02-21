@@ -1,0 +1,10 @@
+#! /bin/bash
+
+declare -a profile
+readarray -t profile < profile.txt
+
+server="http://${profile[0]}/"
+user=${profile[1]}
+json="{\"sender\": \"$user\", \"content\": \"$@\"}"
+
+curl -d "$json" -H "Content-Type: application/json" -X POST $server
