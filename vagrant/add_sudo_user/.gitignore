@@ -1,0 +1,5 @@
+.vagrant
+*.pem
+*.pub
+*.retry
+*.log

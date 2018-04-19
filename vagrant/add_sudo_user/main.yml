@@ -1,0 +1,79 @@
+---
+- name: install python 2
+  hosts: all
+  gather_facts: false
+  become: yes
+  environment:
+    LC_ALL: en_US.UTF-8
+    LANG: en_US.UTF-8
+    LANGUAGE: en_US.UTF-8
+  tasks:
+    - name: install python 2
+      raw: apt -y update && apt install -y python python-dev python-pip
+
+- name: install users
+  hosts: all
+  become: yes
+  vars:
+    do_update: no
+    users:
+      - shivr
+  tasks:
+    - name: update and upgrade packages
+      block:
+        - apt:
+            name: aptitude
+            state: present
+        - shell: |
+            rm -rf /var/lib/apt/lists/*
+        - shell: |
+            apt-get clean
+        - apt:
+            upgrade: full
+            update_cache: yes
+      when: do_update == "yes"
+    - name: ensure wheel group exists
+      group: 
+        name: wheel
+        state: present
+    - name: allow wheel group to have passwordless sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: visudo -cf %s
+    - name: add users to wheel group
+      user:
+        name: "{{ item }}"
+        state: present
+        createhome: yes
+        shell: /bin/bash
+        groups: wheel
+        append: yes
+      with_items: "{{ users }}"
+    - name: ensure users have .ssh directory
+      file:
+        name: "/home/{{ item }}/.ssh"
+        state: directory
+        owner: "{{ item }}"
+        mode: 0755
+      with_items: "{{ users }}"
+    - name: copy ssh public keys to users .ssh
+      copy:
+        src: server.pem.pub
+        dest: "/home/{{ item }}/.ssh/id_rsa.pub"
+        owner: "{{ item }}"
+      with_items: "{{ users }}"
+    - name: copy ssh private keys to users .ssh
+      copy:
+        src: server.pem
+        dest: "/home/{{ item }}/.ssh/id_rsa"
+        owner: "{{ item }}"
+      with_items: "{{ users }}"
+    - name: make ssh keys authorized for all users
+      authorized_key:
+        user: "{{ item }}"
+        state: present
+        key: "{{ lookup('file', '/home/{{ item }}/.ssh/id_rsa.pub') }}"
+      with_items: "{{ users }}"
